@@ -10,6 +10,13 @@ class GameController:
         self.state = "waiting_for_draw"  # État initial
 
     def handle_draw_tile(self, from_discard=False, tile=None):
+        """
+        Piocher une tuile depuis la pioche ou la défausse.
+        :param from_discard:
+        :param tile:
+        :return:
+        """
+
         if self.state != "waiting_for_draw":
             self.view.display_message("Vous ne pouvez pas piocher maintenant.")
             return
@@ -45,24 +52,42 @@ class GameController:
 
         board = self.game.players[0].board
         tile = self.current_tile
+        old_tile = board.get_tile(row, col)
 
         # Vérifier si le placement est valide
         if board.is_valid_move(row, col, tile):
+            # défausser l'ancienne tuile
+            if old_tile is not None and old_tile > 0:
+                self.game.tile_bag.discard_tile(old_tile)
+                board.place_tile(row, col, tile)
+                self.current_tile = None
+                self.state = "waiting_for_draw"
+                self.view.update_board()
+                self.view.clear_current_tile()
+                print("joueur courant", self.game.players[self.game.current_player_index].name)
+                self.next_turn()
+                return
             board.place_tile(row, col, tile)
             self.current_tile = None
             self.state = "waiting_for_draw"
             self.view.update_board()
             self.view.clear_current_tile()
             self.next_turn()
+
         else:
             self.view.display_message("Position invalide pour cette tuile.")
 
     def handle_discard_tile(self):
+        """
+        Défausser la tuile courante.
+        :return:
+        """
         if self.current_tile is not None:
             self.game.tile_bag.discard_tile(self.current_tile)
             self.current_tile = None
             self.state = "waiting_for_draw"
             self.view.clear_current_tile()
+
             self.next_turn()
         else:
             self.view.display_message("Aucune tuile à défausser.")
@@ -74,6 +99,7 @@ class GameController:
         if isinstance(current_player, RandomPlayer):
             # Laisser l'IA jouer son tour
             move_success = current_player.take_turn(self.game.tile_bag)
+            self.next_turn()
             self.view.update_board()
             # Vérifier si l'IA a gagné
             if current_player.board.is_complete():
