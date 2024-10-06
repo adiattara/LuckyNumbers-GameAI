@@ -13,6 +13,10 @@ class RandomPlayer(Player):
         if random.choice(['p', 'd']) == 'p' or len(tile_bag.discard_pile) == 0:
             # Pioche dans le sac
             tile = tile_bag.piocher('p')
+            if tile == -1:
+                # Si la pioche est vide, retourner False pour indiquer la fin de la partie
+                return False, tile_bag
+
             print(f"Ordinateur a pioché la tuile {tile}.")
         else:
             # Choisir une tuile dans la défausse
