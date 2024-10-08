@@ -5,6 +5,11 @@ class Board:
     def __init__(self):
         self.grid = np.zeros((4, 4), dtype=int)
 
+    def reset(self):
+            """Réinitialise la grille à l'état vide."""
+            self.grid = np.zeros((4, 4), dtype=int)
+
+
     def initialize_diagonal(self, tile_bag):
         """
         Initialise la grille en plaçant des tuiles triées sur la diagonale principale.
@@ -164,7 +169,9 @@ class Board:
         :param tile:
         :return:
         """
+        old_tile = self.grid[row, col]
         self.grid[row, col] = tile
+        return old_tile
 
     def get_tile(self, row, col):
 
@@ -238,3 +245,7 @@ class Board:
             return True
         else:
             return False
+
+    def get_discard_board_state_vector(self):
+        state = self.grid.copy()
+        return state.flatten()
