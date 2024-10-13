@@ -2,14 +2,14 @@ import random
 from .Player import Player
 
 class RandomPlayer(Player):
+
     def take_turn(self, tile_bag):
         """
         Prendre un tour pour le joueur ordinateur de manière aléatoire.
         :param tile_bag:
         :return:
         """
-        print(f"\nC'est au tour de l'ordinateur.")
-        # Choisir aléatoirement entre piocher dans le sac ou prendre dans la défausse
+
         if random.choice(['p', 'd']) == 'p' or len(tile_bag.discard_pile) == 0:
             # Pioche dans le sac
             tile = tile_bag.piocher('p')

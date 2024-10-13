@@ -3,6 +3,7 @@ from model.RandomPlayer import RandomPlayer
 from Game import Game
 from GameGUI import GameGUI
 
+
 if __name__ == "__main__":
     player1 = HumanPlayer("Humain")
     player2 = RandomPlayer("Ordinateur")
