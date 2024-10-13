@@ -21,28 +21,13 @@ class Board:
         for i in range(4):
             self.grid[i, i] = tiles[i]
 
-
     def is_valid_move(self, row, col, tile):
         """
         Vérifie si le placement de la tuile est valide en respectant les règles :
         - Les tuiles dans une ligne doivent être strictement croissantes de gauche à droite.
         - Les tuiles dans une colonne doivent être strictement croissantes de haut en bas.
-        - Si la tuile est placée sur la diagonale, elle doit être :
-        - supérieure ou égale aux tuiles en haut à gauche sur la diagonale.
-        - inférieure ou égale aux tuiles en bas à droite sur la diagonale.
+        - Placement libre sur la diagonale principale sans contraintes supplémentaires.
         """
-        
-        # Vérification pour la diagonale (si row == col)
-        if row == col:
-            # Vérifier les tuiles en haut à gauche (strictement croissant)
-            for r in range(0, row):
-                if self.grid[r, r] != 0 and tile <= self.grid[r, r]:
-                    return False
-
-            # Vérifier les tuiles en bas à droite (strictement croissant)
-            for r in range(row + 1, 4):
-                if self.grid[r, r] != 0 and tile >= self.grid[r, r]:
-                    return False
 
         # Vérification pour la ligne (horizontalement)
         # Toutes les tuiles à gauche doivent être strictement inférieures
@@ -66,10 +51,11 @@ class Board:
             if self.grid[r, col] != 0 and tile >= self.grid[r, col]:
                 return False
 
+        # **Supprimer les contraintes diagonales**
+        # Si vous souhaitez toujours placer sur la diagonale sans restrictions, ne pas ajouter de vérifications ici
+
         # Si aucune des règles n'est violée, le mouvement est valide
         return True
-
-
 
     def get_valid_vide_positions(self, tile):
         """
@@ -81,6 +67,19 @@ class Board:
                 if self.grid[row, col] == 0 and self.is_valid_move(row, col, tile):
                     valid_positions.append((row, col))
         return valid_positions
+
+    def get_valid_vide_positions_bis(self, tile):
+        """
+        Retourne les positions vides où la tuile peut être placée en respectant les règles de placement.
+        """
+        valid_positions = []
+        for row in range(4):
+            for col in range(4):
+                 if (self.is_valid_move(row, col, tile)):
+                            valid_positions.append((row, col))
+        return valid_positions
+
+
 
 
     def get_not_empty_valid_positions(self, tile):

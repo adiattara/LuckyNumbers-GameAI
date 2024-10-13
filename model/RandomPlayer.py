@@ -2,6 +2,7 @@ import random
 from .Player import Player
 
 class RandomPlayer(Player):
+
     def take_turn(self, tile_bag):
         """
         Prendre un tour pour le joueur ordinateur de manière aléatoire.
