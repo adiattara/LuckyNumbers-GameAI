@@ -1,0 +1,30 @@
+Deep Q Learning :
+Parameters of 1st experiment:
+- Gamma=0.99
+- Lr=0.0001,
+- mem_size=100000
+- batch_size=64
+- Epsilon_end=0.01
+- Epsilon_dec=1e-3
+- Episodes= 300
+
+==>
+Analysis of Parameters:
+
+High Initial Exploration (epsilon=1.0) combined with a quick decay (epsilon_dec=1e-3) results in rapid exploitation of the learned policy.
+Gamma (0.99) ensures that the agent heavily values future rewards, encouraging it to plan over long horizons, which is suitable for tasks with delayed rewards.
+Learning Rate (0.0001) is relatively low, which can stabilize learning but may slow down convergence.
+Memory Size (100,000) and Batch Size (64) are typical choices for Deep Q-Networks (DQN), providing a large sample of transitions for learning.
+Suggestions for Improvement:
+
+To further improve performance, consider slowing down the decay of epsilon (e.g., using epsilon_dec=1e-4). This allows the agent to explore longer before switching to exploitation.
+Alternatively, increasing max_steps_per_episode might allow the agent to explore more options within each game, especially if games end early due to the agent reaching suboptimal decisions.
+
+Parameters of 2nd experiment:
+- Gamma=0.99
+- Lr=0.0001,
+- mem_size=50000
+- batch_size=64,
+- Epsilon_end=0.01
+- Epsilon_dec=1e-5,
+- Episodes= 1000
