@@ -1,10 +1,12 @@
 import random
 
 import numpy as np
-class TileBag:
-    def __init__(self,nb_players=2):
 
-        self.tiles = list(range(1, 21))*2
+
+class TileBag:
+    def __init__(self, nb_players):
+
+        self.tiles = list(range(1, 21)) * 2
         random.shuffle(self.tiles)
         self.discard_pile = []
 
@@ -14,30 +16,34 @@ class TileBag:
         self.discard_pile = []
 
     def draw_tile(self):
-        #TODO: Gérer le cas où la pioche est vide
-        if not self.tiles:
-            # Reconstituer la pioche à partir de la défausse
+        if not self.tiles and not self.discard_pile:
+            #print("Pioche et défausse vides, fin de la partie.")
             return -1
-        return self.tiles.pop()
+        elif not self.tiles and self.discard_pile:
+            #print("Reconstitution de la pioche à partir de la défausse.")
+            self.tiles = self.discard_pile[:]
+            self.discard_pile = []
+            random.shuffle(self.tiles)
+        tile = self.tiles.pop()
+        #print(f"Pioché la tuile: {tile}")
+        return tile
 
     def discard_tile(self, tile):
         self.discard_pile.append(tile)
+        # print(f"Tuile {tile} défaussée.")
         return self.discard_pile
-
 
     def piocher(self, policy):
         ## s'il choisit de piocher dans le sac de défausse
         if policy == 'd':
-
             if self.discard_pile:
-
                 tile = self.discard_pile.pop()
-
             else:
+                print("Défausse vide, pioche dans le sac de tuiles.")
                 tile = self.draw_tile()
-        ## s'il choisit de piocher dans le sac de tuiles
-        if policy == 'p':
-            tile = self.draw_tile()
+
+        elif policy == 'p':
+                tile = self.draw_tile()
 
         return tile
 

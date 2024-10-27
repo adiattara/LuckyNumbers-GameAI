@@ -13,13 +13,14 @@ class Board:
     def initialize_diagonal(self, tile_bag):
         """
         Initialise la grille en plaçant des tuiles triées sur la diagonale principale.
-        :param tile_bag:
-        :return:
         """
         tiles = [tile_bag.draw_tile() for _ in range(4)]
         tiles.sort()  # Assure que les tuiles sont en ordre croissant
         for i in range(4):
             self.grid[i, i] = tiles[i]
+        print(f"Initialized diagonal with tiles: {tiles}")
+        self.display_board()
+
 
     def is_valid_move(self, row, col, tile):
         """
@@ -28,7 +29,8 @@ class Board:
         - Les tuiles dans une colonne doivent être strictement croissantes de haut en bas.
         - Placement libre sur la diagonale principale sans contraintes supplémentaires.
         """
-
+        valid = True
+        # print(f"Checking move for tile {tile} at ({row}, {col})")
         # Vérification pour la ligne (horizontalement)
         # Toutes les tuiles à gauche doivent être strictement inférieures
         for c in range(0, col):
@@ -55,7 +57,7 @@ class Board:
         # Si vous souhaitez toujours placer sur la diagonale sans restrictions, ne pas ajouter de vérifications ici
 
         # Si aucune des règles n'est violée, le mouvement est valide
-        return True
+        return valid
 
     def get_valid_vide_positions(self, tile):
         """
@@ -163,12 +165,9 @@ class Board:
     def place_tile(self, row, col, tile):
         """
         Place la tuile donnée à la position donnée.
-        :param row:
-        :param col:
-        :param tile:
-        :return:
         """
         old_tile = self.grid[row, col]
+        print(f"Placing tile {tile} at ({row}, {col})")
         self.grid[row, col] = tile
         return old_tile
 
@@ -205,14 +204,14 @@ class Board:
         valid_not_empty_positions = self.get_not_empty_valid_positions(tile)
 
         # Afficher les positions valides sous forme de liste
-        print(f"Positions valides pour la tuile {tile} : {valid_empty_positions}")
-        print(f"Positions occupées valides pour la tuile {tile} : {valid_not_empty_positions}")
+        # print(f"Positions valides pour la tuile {tile} : {valid_empty_positions}")
+        # print(f"Positions occupées valides pour la tuile {tile} : {valid_not_empty_positions}")
 
         # Vérifier si la position est vide et  valide
         if (row, col) in valid_empty_positions:
             # Placer la tuile sur la grille
             self.place_tile(row, col, tile)
-            print(f"Vous avez placé la tuile {tile} en position ({row}, {col}).")
+            # print(f"Vous avez placé la tuile {tile} en position ({row}, {col}).")
             return True, tile_bag
 
         ## Vérifier si la position est occupée et valide
