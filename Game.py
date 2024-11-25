@@ -1,9 +1,8 @@
-# from ansible_collections.check_point.mgmt.plugins.module_utils.checkpoint import discard
-# from debugpy.common.timestamp import current
+#from ansible_collections.check_point.mgmt.plugins.module_utils.checkpoint import discard
+from debugpy.common.timestamp import current
 
 from model.TileBag import TileBag
 import numpy as np
-import random
 
 
 class Game:
@@ -47,12 +46,10 @@ class Game:
         self.tile_bag.reset()
         for player in self.players:
             player.board.reset()
-            player.board.initialize_diagonal(self.tile_bag)
-        self.current_tile = 0  # la main est vide
         self.current_player_index = 0
         self.game_over = False
-        self.start = True
-
+        return self.get_state_description()
+    
     def get_state_description(self):
         """Retourne le vecteur d'état complet."""
 
@@ -86,50 +83,47 @@ class Game:
 
     def get_valid_actions(self):
         """Retourne la liste des indices d'actions valides."""
+
         player = self.players[self.current_player_index]
-        # print(f"Current player index: {self.current_player_index}")
+        print(self.current_player_index)
 
         # Initialisation d'une liste de 38 actions valides (0 = invalide par défaut)
         valid_actions = [0] * 38
-        # print(f"État actuel du jeu pour {self.players[self.current_player_index].name}:")
-        # print(f"Tuile courante: {self.current_tile}")
-        # print(f"Tuiles restantes dans le sac: {len(self.tile_bag.tiles)}")
-        # print(f"Tuiles dans la défausse: {self.tile_bag.get_discard_pile_state_vector()}")
 
-        # Si la partie vient de commencer
-        if self.start:
+        # si la partie vient de commencer
+        if (self.start == True):
             valid_actions[self.DRAW_FROM_BAG] = 1
             self.start = False
-            print("Start of the game, only DRAW_FROM_BAG is valid")
             return valid_actions
-        # print("start situation : ", self.start)
-        # Si le joueur n'a pas de tuile en main
-        if (self.current_tile == 0):
+
+        # si le joueur n'a pas de tuile en main
+        if(self.current_tile == 0):
 
             if len(self.tile_bag.tiles) > 0:
                 valid_actions[self.DRAW_FROM_BAG] = 1
 
-            if (len(self.tile_bag.tiles) == 0):
+            if(len(self.tile_bag.tiles)==0):
                 self.game_over = True
 
-            if len(self.tile_bag.discard_pile) > 0:
-                valid_actions[
-                self.DRAW_FROM_DISCARD_START:self.DRAW_FROM_DISCARD_END] = self.tile_bag.get_discard_pile_state_vector()
+            if len(self.tile_bag.discard_pile)>0:
+                valid_actions[self.DRAW_FROM_DISCARD_START:self.DRAW_FROM_DISCARD_END] = self.tile_bag.get_discard_pile_state_vector()
 
-            print(f"Tuile en main: {self.current_tile}.\n Actions valides: {valid_actions}")
             return valid_actions
 
-        # Si le joueur a une tuile en main
+        # si le joueur a une tuile en main
         # 1. Placer la tuile actuelle
         for idx in range(self.PLACE_TILE_START, self.PLACE_TILE_END + 1):
             row, col = divmod(idx, 4)
+            # Vérifie si la case est vide et si le coup est valide
             if player.board.is_valid_move(row, col, self.current_tile):
+
                 valid_actions[idx] = 1
 
-        # 2. Défausser la tuile actuelle
-        valid_actions[self.DISCARD_TILE] = 1
+        # 2. Défausser la tuile actuelle (si elle existe)
+        if self.current_tile !=0:
+            valid_actions[self.DISCARD_TILE] = 1
 
-        # print(f"Actions valides actuelles: {[i for i, v in enumerate(valid_actions) if v == 1]}")
+
         return valid_actions
 
     def available_actions_ids(self):
@@ -146,73 +140,64 @@ class Game:
         return available_actions
 
     def step_action(self, action):
-        """Exécute l'action choisie par l'agent et gère la progression du jeu."""
+
+        """Exécute l'action choisie par l'agent."""
         player = self.players[self.current_player_index]
+
         reward = 0
 
-        if action == self.DRAW_FROM_BAG:
-            print("Action : Piocher une tuile depuis le sac.")
-            # Piocher une nouvelle tuile si le sac n'est pas vide
-            self.current_tile = self.tile_bag.draw_tile() if len(self.tile_bag.tiles) > 0 else 0
-            # print(f"Nouvelle tuile tirée: {self.current_tile}")
-            reward += 10 if self.current_tile else -10  # Récompense si tirage réussi
+        # 1. Piocher une tuile du sac (action 37)
+        if action == 37:
+                self.current_tile = self.tile_bag.draw_tile()
+                # print(f"Le joueur a pioché la tuile {self.current_tile}")
 
-        elif self.DRAW_FROM_DISCARD_START <= action <= self.DRAW_FROM_DISCARD_END:
-
-            discard_index = action - self.DRAW_FROM_DISCARD_START
-            if discard_index < len(self.tile_bag.discard_pile):
-                self.current_tile = self.tile_bag.discard_pile[discard_index]
-                self.tile_bag.discard_pile.pop(discard_index)
-                reward += 3
-                # print(f"Tuile piochée depuis la défausse: {self.current_tile}")
-            else:
-                reward -= 10  # Pénalité si tirage de défausse invalide
-
-        elif action == self.DISCARD_TILE:
-            print("Action : Défausser la tuile.")
-            # Défausser la tuile si elle est valide
-            if self.current_tile != 0:
-                self.tile_bag.discard_tile(self.current_tile)
-                self.current_tile = 0
-                reward += 1
-                # print("Tuile défaussée.")
-
+        # 2. Placer une tuile sur la grille (actions 0 à 15)
         elif 0 <= action <= 15:
-            print(f"Action : placer la tuile {action} à la position correspondante à l'action {action}.")
-            # Placer la tuile sur la grille
             row, col = divmod(action, 4)
-            if player.board.is_valid_move(row, col, self.current_tile):
-                old_tile = player.board.place_tile(row, col, self.current_tile)
-                if old_tile != 0:
-                    self.tile_bag.discard_tile(old_tile)
-                self.current_tile = 0
-                reward += 50
-                # print(f"Tuile placée en position ({row}, {col})")
+            old_tile = player.board.place_tile(row, col, self.current_tile)
+            if old_tile != 0:
+                self.tile_bag.discard_tile(old_tile)
 
-                if player.board.is_complete():
-                    self.game_over = True
-                    print("Grille complète ! Fin du jeu.")
+#             print(f"Le joueur a placé la tuile {self.current_tile} à ({row}, {col})")
+            self.current_tile = 0  # Réinitialise la tuile après le placement
 
-        else:
-            reward -= 10  # Pénalité pour action invalide
+            if player.board.is_complete():
+                self.game_over = True
 
-        if not self.tile_bag.tiles and not self.tile_bag.discard_pile:
-            print("Pioche et défausse vides, fin de la partie.")
-            self.game_over = True
+        # 3. Défausser la tuile actuelle (action 16)
+        elif action == 16:
+                self.tile_bag.discard_tile(self.current_tile)
+                self.current_tile = 0  # Le joueur n'a plus de tuile après la défausse
+#                 print(f"Le joueur a défaussé la tuile.")
 
-        if not self.tile_bag.tiles and self.tile_bag.discard_pile:
-            self.tile_bag.tiles = self.tile_bag.discard_pile[:]
-            self.tile_bag.discard_pile = []
-            random.shuffle(self.tile_bag.tiles)
-            print("Refilled tile bag from discard pile.")
 
-        # Vérifie si une tuile doit être piochée pour le prochain tour
-        if self.current_tile == 0 and not self.game_over:
-            self.current_tile = self.tile_bag.draw_tile() if len(self.tile_bag.tiles) > 0 else 0
-            # print(f"Nouvelle tuile après action: {self.current_tile}")
+        # 4. Piocher une tuile de la pile de défausse (actions 17 à 36)
+        elif 17 <= action <= 36:
+            tile_index = action - 17
+            self.current_tile = tile_index +1
+            self.tile_bag.discard_pile.remove(tile_index+1)
+#             print("Le joueur a pioché la tuile {tile_index} de la défausse.")
 
-        self.done = self.game_over
-        return player, reward, self.done
+        return  player,reward,self.game_over
+
+    def step(self, action, tile_bag):
+        """
+        Execute an action in the game environment and return the resulting state, reward, and game status.
+        
+        :param action: the action to execute
+        :param tile_bag: the TileBag instance for drawing or discarding tiles
+        :return: tuple of (next_state, reward, done)
+        """
+ 
+        #print(f"Action received: {action}")
+        player = self.players[self.current_player_index]
+        reward, done = player.take_action(action, tile_bag)
+        #print(f"Action results - Reward: {reward}, Game Over: {done}")
+        next_state = self.get_state_description()
+        #print(f"Next State: {next_state}")
+        return next_state, reward, done
+
+
 
     def play(self):
         """
@@ -280,9 +265,8 @@ class Game:
 
 
     def next_player(self):
-        print(f"Changement de joueur, joueur actuel avant changement: {self.players[self.current_player_index].name}")
-        self.current_player_index = (self.current_player_index + 1) % len(self.players)
-        print(f"Joueur actuel après changement: {self.players[self.current_player_index].name}")
+            self.current_player_index = (self.current_player_index + 1) % len(self.players)
+
 
     def get_current_player(self):
             return self.players[self.current_player_index]
